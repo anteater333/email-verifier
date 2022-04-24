@@ -22,6 +22,7 @@ const sendMail = async (): Promise<boolean> => {
 
     result = true;
   } catch (error) {
+    console.error(error);
     result = false;
   } finally {
     await client.close();
