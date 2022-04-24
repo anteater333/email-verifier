@@ -1,27 +1,16 @@
-import nodemailer from "nodemailer";
+import { serve } from "https://deno.land/std@0.136.0/http/server.ts";
 
-const options = {
-  service: "gmail",
-  host: "smtp.gmail.com",
-  port: 587,
-  auth: {
-    user: "anteater1056@gmail.com",
-    pass: "exbesyrmjvtpcbdx",
-  },
+import sendMail from "./src/sender.ts";
+
+const sendMailHandler = async (req: Request): Promise<Response> => {
+  console.log("request,", req);
+  if (await sendMail()) {
+    return new Response("good", { status: 200 });
+  } else {
+    return new Response("bad", { status: 500 });
+  }
 };
 
-const transporter = nodemailer.createTransport({
-  ...options,
-});
+serve(sendMailHandler);
 
-const mailDestination = "zx1056@naver.com";
-transporter
-  .sendMail({
-    from: `"Que" no-reply-que@gmail.com`,
-    to: mailDestination,
-    subject: "QUE 인증메일",
-    text: "111111 입니다.",
-  })
-  .then((result) => {
-    console.log(result.response);
-  });
+console.log("server listening...");
