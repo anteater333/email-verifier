@@ -1,16 +1,37 @@
-import { serve } from "https://deno.land/std@0.136.0/http/server.ts";
+import { Application } from "https://deno.land/x/oak@v10.5.1/mod.ts";
+import appConfig from "./src/config.ts";
+import router from "./src/controllers/router.ts";
+import database from "./src/database/database.ts";
 
-import sendMail from "./src/sender.ts";
+const app = new Application();
 
-const sendMailHandler = async (req: Request): Promise<Response> => {
-  console.log("request,", req);
-  if (await sendMail()) {
-    return new Response("good", { status: 200 });
-  } else {
-    return new Response("bad", { status: 500 });
-  }
-};
+/** start db connection */
+const db = await database.init();
 
-serve(sendMailHandler);
+const serverPort = parseInt(appConfig.SERVER_PORT!);
 
-console.log("server listening...");
+/** Logger middleware */
+app.use(async (context, next) => {
+  await next();
+  const responseTime = context.response.headers.get("X-Response-Time");
+  console.log(
+    `${context.response.status} ${context.request.method} ${context.request.url} - ${responseTime}`
+  );
+});
+
+/** Response Timer */
+app.use(async (context, next) => {
+  const start = Date.now();
+  await next();
+  const ms = Date.now() - start;
+  context.response.headers.set("X-Response-Time", `${ms}ms`);
+});
+
+app.use(router.routes());
+app.use(router.allowedMethods());
+
+app.addEventListener("listen", () => {
+  console.log(`The server listening on port ${serverPort}`);
+});
+
+await app.listen({ port: serverPort });

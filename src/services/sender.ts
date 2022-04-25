@@ -1,4 +1,5 @@
-import { SmtpClient } from "https://deno.land/x/denomailer/mod.ts";
+import { SmtpClient } from "https://deno.land/x/denomailer@0.16.4/mod.ts";
+import appConfig from "../config.ts";
 
 const sendMail = async (): Promise<boolean> => {
   const client = new SmtpClient();
@@ -6,14 +7,14 @@ const sendMail = async (): Promise<boolean> => {
   let result: boolean;
   try {
     await client.connect({
-      hostname: "smtp.gmail.com",
-      port: 587,
-      username: "anteater1056@gmail.com",
-      password: "exbesyrmjvtpcbdx",
+      hostname: appConfig.SMTP_HOST_NAME!,
+      port: parseInt(appConfig.SMTP_PORT!),
+      username: appConfig.SMTP_USERNAME,
+      password: appConfig.SMTP_PASSWORD,
     });
 
     await client.send({
-      from: "anteater1056@gmail.com",
+      from: appConfig.SMTP_USERNAME!,
       to: "zx1056@naver.com",
       subject: "Que 인증 번호입니다.",
       content: "auto",
