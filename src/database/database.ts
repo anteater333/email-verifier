@@ -1,6 +1,7 @@
 import { MongoClient } from "https://deno.land/x/mongo@v0.29.4/mod.ts";
-import appConfig from "../config.ts";
+import appConfig from "../config/config.ts";
 
+// mongodb 의존 코드
 const database = {
   init: async function () {
     try {

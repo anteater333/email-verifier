@@ -1,5 +1,5 @@
 import { Application } from "https://deno.land/x/oak@v10.5.1/mod.ts";
-import appConfig from "./src/config.ts";
+import appConfig from "./src/config/config.ts";
 import router from "./src/controllers/router.ts";
 import database from "./src/database/database.ts";
 

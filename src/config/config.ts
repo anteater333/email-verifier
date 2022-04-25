@@ -11,6 +11,13 @@ type AppConfigType = {
   MONGO_PASSWORD?: string;
   MONGO_DATABASE?: string;
   SERVER_PORT?: string;
+  FIREBASE_KEY?: string;
+  FIREBASE_DOMAIN?: string;
+  FIREBASE_PROJECT?: string;
+  FIREBASE_STORAGE?: string;
+  FIREBASE_MESSAGE_SENDER?: string;
+  FIREBASE_APP_ID?: string;
+  FIREBASE_MEASUREMENT?: string;
 };
 
 const appConfig: AppConfigType = await config();
