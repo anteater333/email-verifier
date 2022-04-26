@@ -75,3 +75,15 @@ export const tryVerification = async (mail: string, code: string) => {
     return false;
   }
 };
+
+/** 회원가입이 끝난 검증정보 삭제하기 */
+export const deleteVerification = async (mail: string) => {
+  const db = Database.getDatabase();
+  const verCol = db.collection<VerificationSchema>("verifications");
+
+  try {
+    await verCol.deleteOne({ email: mail });
+  } catch (error) {
+    throw error;
+  }
+};

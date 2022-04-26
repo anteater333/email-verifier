@@ -3,7 +3,7 @@ import {
   helpers,
   Status,
 } from "https://deno.land/x/oak@v10.5.1/mod.ts";
-import { validateEmail } from "../utils/validator.ts";
+import { validateEmail, validatePassword } from "../utils/validator.ts";
 import { QueServerAPI, VerDBAPI } from "../services/api/index.ts";
 import { sendMail, verifyCode } from "../services/verificationService.ts";
 
@@ -39,20 +39,17 @@ router.get("/verification", async (context) => {
     return;
   }
 
-  // 가입은 안됐지만 이미 검증과정을 거친 메일인 경우 Status.AlreadyReported 반환
-  try {
-    if (await VerDBAPI.checkAlreadyVerified(mailAddr)) {
-      context.response.status = Status.AlreadyReported;
-      context.response.body = { msg: "You already passed verification." };
-      return;
-    }
-  } catch (error) {
+  const verData = await VerDBAPI.getVerification(mailAddr);
+  if (verData?.verified) {
+    // 가입은 안됐지만 이미 검증과정을 거친 메일인 경우 Status.AlreadyReported 반환
+    context.response.status = Status.AlreadyReported;
+    context.response.body = { msg: "You already passed verification." };
+    return;
+  } else if (verData && verData?.updateCount >= 10) {
     // 업데이트 횟수가 지나치게 많은 경우 확인
-    if (error.message === "429") {
-      context.response.status = Status.TooManyRequests;
-      context.response.body = { msg: "Too many requests." };
-      return;
-    } else throw error;
+    context.response.status = Status.TooManyRequests;
+    context.response.body = { msg: "Too many requests." };
+    return;
   }
 
   // 검증 메일 전송 요청 (시간이 오래 걸리므로 비동기 처리)
@@ -85,7 +82,7 @@ router.post("/verification", async (context) => {
   /** body 제대로 입력했는지 여부 */
   if (!reqBody.code || !reqBody.mail) {
     context.response.status = Status.BadRequest;
-    context.response.body = { msg: "Missing body parameters" };
+    context.response.body = { msg: "Missing body parameters." };
   }
 
   const mailAddr = reqBody.mail;
@@ -122,6 +119,73 @@ router.post("/verification", async (context) => {
       context.response.status = Status.RequestTimeout;
       context.response.body = { msg: "Request timeout" };
     } else throw error;
+  }
+});
+
+type SignUpReqBodyType = {
+  mail: string;
+  password: string;
+};
+
+/** 회원 가입 요청 */
+router.post("/signup", async (context) => {
+  if (!context.request.hasBody) {
+    context.response.status = Status.BadRequest;
+    context.response.body = { msg: "Request body required." };
+    return;
+  }
+
+  const reqBody: SignUpReqBodyType = await context.request.body({
+    type: "json",
+  }).value;
+
+  /** body 제대로 입력했는지 여부 */
+  if (!reqBody.password || !reqBody.mail) {
+    context.response.status = Status.BadRequest;
+    context.response.body = { msg: "Missing body parameters." };
+  }
+
+  const mailAddr = reqBody.mail;
+  const pwd = reqBody.password;
+
+  /** 비밀번호 검증 */
+  if (!validatePassword(pwd)) {
+    context.response.status = Status.BadRequest;
+    context.response.body = { msg: "Invalid password." };
+    return;
+  }
+
+  const verData = await VerDBAPI.getVerification(mailAddr);
+  if (!verData) {
+    // 메일 인증 먼저 하시오
+    context.response.status = Status.NotFound;
+    context.response.body = { msg: "Verify your mail first." };
+    return;
+  }
+
+  if (!verData.verified) {
+    // 메일 인증 아직 안됐음
+    context.response.status = Status.Forbidden;
+    context.response.body = { msg: "Input your code first." };
+    return;
+  }
+
+  // !! 서비스 회원가입 !!
+  try {
+    await QueServerAPI.createUser(mailAddr, pwd);
+
+    context.response.status = Status.Created;
+    context.response.body = { msg: "User successfully created." };
+
+    // 필요없어진 검증 정보 삭제하기
+    VerDBAPI.deleteVerification(mailAddr).catch((error) => {
+      console.error("Error while deleting finished verification data.");
+      console.error(error);
+    });
+  } catch (error) {
+    console.error(error);
+    context.response.status = Status.InternalServerError;
+    context.response.body = { msg: "Internal Server Error. Report me." };
   }
 });
 

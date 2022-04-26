@@ -11,6 +11,11 @@ import {
   query,
   getDocs,
 } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/9.6.0/firebase-auth.js";
 
 import appConfig from "../../../config/config.ts";
 
@@ -43,6 +48,15 @@ export default {
         return false;
       }
       return true;
+    } catch (error) {
+      throw error;
+    }
+  },
+  createUser: async function (mail: string, password: string): Promise<void> {
+    const auth = getAuth();
+    try {
+      await createUserWithEmailAndPassword(auth, mail, password);
+      await signOut(auth);
     } catch (error) {
       throw error;
     }
