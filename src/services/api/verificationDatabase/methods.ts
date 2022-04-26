@@ -1,12 +1,19 @@
 import Database from "../../../database/database.ts";
 import { VerificationSchema } from "../../../database/schema.ts";
 
-export const checkDBForAlreadyVerified = async (mail: string) => {
+/** 메일을 통해 인증 정보를 가져옴 */
+export const getVerification = async (
+  mail: string
+): Promise<VerificationSchema | undefined> => {
   const db = Database.getDatabase();
 
   const verCol = db.collection<VerificationSchema>("verifications");
 
-  const verData = await verCol.findOne({ email: mail });
+  return await verCol.findOne({ email: mail });
+};
+
+export const checkDBForAlreadyVerified = async (mail: string) => {
+  const verData = await getVerification(mail);
   if (!verData) {
     // 아직 인증 정보 없음
     return false;
@@ -42,5 +49,29 @@ export const upsertVerification = async (mail: string, code: string) => {
     await verCol.insertOne(upsertData);
   } else {
     await verCol.updateOne({ email: mail }, { $set: upsertData });
+  }
+};
+
+/** 검증 */
+export const tryVerification = async (mail: string, code: string) => {
+  const db = Database.getDatabase();
+  const verCol = db.collection<VerificationSchema>("verifications");
+
+  const verData = await verCol.findOne({ email: mail });
+
+  /** 정답 */
+  const verCode = verData?.verCode;
+
+  if (verCode === code) {
+    // 정답
+    await verCol.updateOne({ email: mail }, { $set: { verified: true } });
+    return true;
+  } else {
+    // 오답
+    await verCol.updateOne(
+      { email: mail },
+      { $set: { trialCount: verData!.trialCount++ } }
+    );
+    return false;
   }
 };

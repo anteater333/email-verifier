@@ -48,3 +48,30 @@ export const sendMail = async (mailAddr: string): Promise<boolean> => {
 
   return true;
 };
+
+// 이 시간 지난 정보는 취급 안합니다. 단위: ms
+const TIME_LIMIT = 300000;
+
+/** 사용자가 요청한 정보 기반으로 인증 시도하기 */
+export const verifyCode = async (mail: string, code: string) => {
+  // 검증 정보 가져오기
+  const verData = await VerDBAPI.getVerification(mail);
+
+  /** 검증 데이터 없음 */
+  if (!verData) {
+    throw new Error("404");
+  }
+
+  /** 너무 오래된 검증 정보 */
+  const timePassed = new Date().getTime() - verData.createdAt.getTime();
+  if (timePassed > TIME_LIMIT) {
+    throw new Error("408");
+  }
+
+  /** 너무 많이 요청함 */
+  if (verData.trialCount >= 5) {
+    throw new Error("429");
+  }
+
+  return VerDBAPI.tryVerification(mail, code);
+};

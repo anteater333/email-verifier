@@ -2,7 +2,10 @@ import firebase from "./firebase/client.ts";
 import {
   checkDBForAlreadyVerified,
   upsertVerification,
+  getVerification,
+  tryVerification,
 } from "./verificationDatabase/methods.ts";
+import { VerificationSchema } from "../../database/schema.ts";
 
 const QueAPIClient = firebase;
 
@@ -20,9 +23,15 @@ const VerDBAPI: {
   checkAlreadyVerified: (mail: string) => Promise<boolean>;
   /** 새 검증 정보 생성 */
   makeVerification: (mail: string, code: string) => Promise<void>;
+  /** 저장된 검증정보 가져오기 */
+  getVerification: (mail: string) => Promise<VerificationSchema | undefined>;
+  /** 검증 여부 저장하기 */
+  tryVerification: (mail: string, code: string) => Promise<boolean>;
 } = {
   checkAlreadyVerified: checkDBForAlreadyVerified,
   makeVerification: upsertVerification,
+  getVerification: getVerification,
+  tryVerification: tryVerification,
 };
 
 export { VerDBAPI, QueServerAPI };

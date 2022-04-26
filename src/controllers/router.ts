@@ -5,7 +5,7 @@ import {
 } from "https://deno.land/x/oak@v10.5.1/mod.ts";
 import { validateEmail } from "../utils/validator.ts";
 import { QueServerAPI, VerDBAPI } from "../services/api/index.ts";
-import { sendMail } from "../services/mailService.ts";
+import { sendMail, verifyCode } from "../services/verificationService.ts";
 
 const router = new Router({ prefix: "/api/v1" });
 
@@ -67,10 +67,62 @@ router.get("/verification", async (context) => {
   }
 });
 
+type VerReqBodyType = {
+  mail: string;
+  code: string;
+};
+
 /** 인증 코드 확인 요청 */
 router.post("/verification", async (context) => {
-  console.log(context.request.hasBody);
-  context.response.body = await context.request.body({ type: "json" }).value;
+  if (!context.request.hasBody) {
+    context.response.status = Status.BadRequest;
+    context.response.body = { msg: "Request body required." };
+    return;
+  }
+  const reqBody: VerReqBodyType = await context.request.body({ type: "json" })
+    .value;
+
+  /** body 제대로 입력했는지 여부 */
+  if (!reqBody.code || !reqBody.mail) {
+    context.response.status = Status.BadRequest;
+    context.response.body = { msg: "Missing body parameters" };
+  }
+
+  const mailAddr = reqBody.mail;
+  const code = reqBody.code;
+
+  try {
+    const result = await verifyCode(mailAddr, code);
+
+    if (!result) {
+      // 잘못된 정보 입력
+      context.response.status = Status.Forbidden;
+      context.response.body = { msg: "Wrong code" };
+      return;
+    }
+
+    context.response.status = Status.OK;
+    context.response.body = {
+      msg: "Email address verified",
+    };
+    return;
+  } catch (error) {
+    if (error.message === "429") {
+      // 시도 횟수가 지나치게 많은 경우 확인
+      context.response.status = Status.TooManyRequests;
+      context.response.body = { msg: "Too many requests." };
+      return;
+    } else if (error.message === "404") {
+      // 그런 이메일 없습니다.
+      context.response.status = Status.NotFound;
+      context.response.body = { msg: "No such email" };
+      return;
+    } else if (error.message === "408") {
+      // 시간(ex. 5분) 지난 인증 정보
+      context.response.status = Status.RequestTimeout;
+      context.response.body = { msg: "Request timeout" };
+    } else throw error;
+  }
 });
 
 export default router;
