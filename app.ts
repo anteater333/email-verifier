@@ -1,12 +1,12 @@
 import { Application } from "https://deno.land/x/oak@v10.5.1/mod.ts";
 import appConfig from "./src/config/config.ts";
 import router from "./src/controllers/router.ts";
-import database from "./src/database/database.ts";
+import Database from "./src/database/database.ts";
 
 const app = new Application();
 
 /** start db connection */
-const db = await database.init();
+await Database.init();
 
 const serverPort = parseInt(appConfig.SERVER_PORT!);
 
