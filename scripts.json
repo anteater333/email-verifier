@@ -4,7 +4,8 @@
     "start": {
       "cmd": "deno run app.ts",
       "desc": "run my app.ts file",
-      "allow": ["net", "env", "read"]
+      "allow": ["net", "env", "read"],
+      "env": { "MODE": "dev" }
     }
   }
 }
