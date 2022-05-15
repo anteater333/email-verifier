@@ -1,4 +1,6 @@
 import { Application } from "https://deno.land/x/oak@v10.5.1/mod.ts";
+import { oakCors } from "https://deno.land/x/cors@v1.2.2/mod.ts";
+
 import appConfig from "./src/config/config.ts";
 import router from "./src/controllers/router.ts";
 import Database from "./src/database/database.ts";
@@ -9,6 +11,13 @@ const app = new Application();
 await Database.init();
 
 const serverPort = parseInt(appConfig.SERVER_PORT!);
+
+/** cors 설정 */
+app.use(
+  oakCors({
+    origin: "*",
+  })
+);
 
 /** Logger middleware */
 app.use(async (context, next) => {

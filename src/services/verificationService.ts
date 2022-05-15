@@ -16,35 +16,38 @@ export const sendMail = async (mailAddr: string): Promise<boolean> => {
   await VerDBAPI.makeVerification(mailAddr, code);
 
   const client = new SmtpClient();
-  /** 클라이언트가 너무 오래 기다리지 않도록 만들기 */
-  client
-    .connect({
-      hostname: appConfig.SMTP_HOST_NAME!,
-      port: parseInt(appConfig.SMTP_PORT!),
-      username: appConfig.SMTP_USERNAME,
-      password: appConfig.SMTP_PASSWORD,
-    })
-    .then(() => {
-      client
-        .send({
-          from: appConfig.SMTP_USERNAME!,
-          to: mailAddr,
-          subject: "Que 인증 코드입니다.",
-          content: "auto",
-          html: codeMailContent(code),
-        })
-        .catch((error) => {
-          console.error("Error while sending mail");
-          console.error(error);
-        })
-        .finally(async () => {
-          await client.close();
-        });
-    })
-    .catch((error) => {
-      console.error("Failed to connect to smtp host");
-      console.error(error);
-    });
+  // development 모드에서는 메일 보내지 않기
+  if (appConfig.MODE === "deployment") {
+    /** 클라이언트가 너무 오래 기다리지 않도록 만들기 */
+    client
+      .connect({
+        hostname: appConfig.SMTP_HOST_NAME!,
+        port: parseInt(appConfig.SMTP_PORT!),
+        username: appConfig.SMTP_USERNAME,
+        password: appConfig.SMTP_PASSWORD,
+      })
+      .then(() => {
+        client
+          .send({
+            from: appConfig.SMTP_USERNAME!,
+            to: mailAddr,
+            subject: "Que 인증 코드입니다.",
+            content: "auto",
+            html: codeMailContent(code),
+          })
+          .catch((error) => {
+            console.error("Error while sending mail");
+            console.error(error);
+          })
+          .finally(async () => {
+            await client.close();
+          });
+      })
+      .catch((error) => {
+        console.error("Failed to connect to smtp host");
+        console.error(error);
+      });
+  }
 
   return true;
 };

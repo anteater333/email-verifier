@@ -70,7 +70,7 @@ export const tryVerification = async (mail: string, code: string) => {
     // 오답
     await verCol.updateOne(
       { email: mail },
-      { $set: { trialCount: verData!.trialCount++ } }
+      { $set: { trialCount: ++verData!.trialCount } }
     );
     return false;
   }

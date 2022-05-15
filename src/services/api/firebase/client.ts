@@ -10,6 +10,8 @@ import {
   where,
   query,
   getDocs,
+  setDoc,
+  doc,
 } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js";
 import {
   getAuth,
@@ -53,9 +55,23 @@ export default {
     }
   },
   createUser: async function (mail: string, password: string): Promise<void> {
-    const auth = getAuth();
+    const auth = getAuth(firebaseApp);
     try {
-      await createUserWithEmailAndPassword(auth, mail, password);
+      const createdUser = await createUserWithEmailAndPassword(
+        auth,
+        mail,
+        password
+      );
+
+      // spark 요금 사용 중입니다.
+      // firebase function 대신 firestore 문서 생성하기
+      const firestore = getFirestore();
+      const newUserDocRef = doc(firestore, "users", createdUser.user.uid);
+      await setDoc(newUserDocRef, {
+        email: createdUser.user.email,
+        registeredAt: createdUser.user.metadata.creationTime,
+      });
+
       await signOut(auth);
     } catch (error) {
       throw error;

@@ -18,6 +18,7 @@ type AppConfigType = {
   FIREBASE_MESSAGE_SENDER?: string;
   FIREBASE_APP_ID?: string;
   FIREBASE_MEASUREMENT?: string;
+  MODE?: "development" | "deployment";
 };
 
 const appConfig: AppConfigType = await config();
