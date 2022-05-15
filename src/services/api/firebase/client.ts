@@ -20,6 +20,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-auth.js";
 
 import appConfig from "../../../config/config.ts";
+import { generateRandomNickname } from "../../../utils/generator.ts";
 
 const firebaseConfig = {
   apiKey: appConfig.FIREBASE_KEY,
@@ -70,6 +71,7 @@ export default {
       await setDoc(newUserDocRef, {
         email: createdUser.user.email,
         registeredAt: createdUser.user.metadata.creationTime,
+        nickname: generateRandomNickname(),
       });
 
       await signOut(auth);
