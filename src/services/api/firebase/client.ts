@@ -12,6 +12,7 @@ import {
   getDocs,
   setDoc,
   doc,
+  Timestamp,
 } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js";
 import {
   getAuth,
@@ -70,8 +71,12 @@ export default {
       const newUserDocRef = doc(firestore, "users", createdUser.user.uid);
       await setDoc(newUserDocRef, {
         email: createdUser.user.email,
-        registeredAt: createdUser.user.metadata.creationTime,
+        registeredAt: Timestamp.fromDate(
+          new Date(createdUser.user.metadata.creationTime)
+        ),
         nickname: generateRandomNickname(),
+        description: "",
+        profilePictureUrl: "",
       });
 
       await signOut(auth);
