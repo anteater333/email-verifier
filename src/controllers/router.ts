@@ -128,6 +128,7 @@ type SignUpReqBodyType = {
 };
 
 /** 회원 가입 요청 */
+// TBD 인증 코드를 다시 입력하도록 만들기 (중간 과정에서의 공격 가능성)
 router.post("/signup", async (context) => {
   if (!context.request.hasBody) {
     context.response.status = Status.BadRequest;

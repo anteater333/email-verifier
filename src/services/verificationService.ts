@@ -2,11 +2,7 @@ import { SmtpClient } from "https://deno.land/x/denomailer@0.16.4/mod.ts";
 import appConfig from "../config/config.ts";
 import { codeMailContent } from "../contents/factory.ts";
 import { VerDBAPI } from "./api/index.ts";
-
-/** 랜덤 6자리 코드 생성 */
-function genCode() {
-  return Math.random().toString().slice(2, 8);
-}
+import { genCode } from "../utils/generator.ts";
 
 /** 인증 번호가 담긴 메일을 전송하는 서비스 메소드 */
 export const sendMail = async (mailAddr: string): Promise<boolean> => {
