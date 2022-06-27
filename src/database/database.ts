@@ -22,7 +22,12 @@ class DBClient {
             port: parseInt(appConfig.MONGO_PORT!),
           },
         ],
-        //  credential: {}  // TODO 서버 인스턴스에 배포 시 계정 설정
+        credential: {
+          username: appConfig.MONGO_USERNAME!,
+          password: appConfig.MONGO_PASSWORD!,
+          db: appConfig.MONGO_DATABASE!,
+          mechanism: "SCRAM-SHA-1",
+        },
       });
 
       console.log(
