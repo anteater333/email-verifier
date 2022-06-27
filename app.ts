@@ -5,6 +5,11 @@ import appConfig from "./src/config/config.ts";
 import router from "./src/controllers/router.ts";
 import Database from "./src/database/database.ts";
 
+console.log("Starting server");
+console.log("Server ENV list:");
+console.log(appConfig);
+console.log("======");
+
 const app = new Application();
 
 /** start db connection */
