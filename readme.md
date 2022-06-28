@@ -30,6 +30,7 @@ FIREBASE_MESSAGE_SENDER=
 FIREBASE_APP_ID=
 FIREBASE_MEASUREMENT=
 
+MODE=<deployment | development>
 ```
 
 ## API 목록
