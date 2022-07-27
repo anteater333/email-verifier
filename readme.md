@@ -34,6 +34,7 @@ MODE=<deployment | development>
 ```
 
 ## API 목록
+(Prefix: `/api/v1`)
 
 ### `GET /verification`
 
